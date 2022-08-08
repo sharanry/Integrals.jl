@@ -1,5 +1,5 @@
 using Integrals, Zygote, FiniteDiff, ForwardDiff, SciMLSensitivity
-using IntegralsCuba, IntegralsCubature
+using IntegralsCuba, IntegralsCubature, ChainRulesTestUtils
 using Test
 
 ### One Dimensional
@@ -16,17 +16,29 @@ function testf(lb, ub, p)
     sin(solve(prob, QuadGKJL(), reltol = 1e-3, abstol = 1e-3)[1])
 end
 dlb1, dub1, dp1 = Zygote.gradient(testf, lb, ub, p)
+
 dlb2 = FiniteDiff.finite_difference_derivative(lb -> testf(lb, ub, p), lb)
 dub2 = FiniteDiff.finite_difference_derivative(ub -> testf(lb, ub, p), ub)
 dp2 = FiniteDiff.finite_difference_derivative(p -> testf(lb, ub, p), p)
 
-# dlb3 = ForwardDiff.derivative(lb->testf(lb,ub,p),lb)
-# dub3 = ForwardDiff.derivative(ub->testf(lb,ub,p),ub)
+@test dlb1 ≈ dlb2
+@test dub1 ≈ dub2
+@test dp1 ≈ dp3
+
+@test_broken dlb3 = ForwardDiff.derivative(lb->testf(lb,ub,p),lb)
+@test_broken dub3 = ForwardDiff.derivative(ub->testf(lb,ub,p),ub)
 dp3 = ForwardDiff.derivative(p -> testf(lb, ub, p), p)
 
 #@test dlb1 ≈ dlb3
 #@test dub1 ≈ dub3
 @test dp1 ≈ dp3
+
+-f(lb, p)
+f(ub, p)
+
+
+test_frule(solve, prob, QuadGKJL())
+test_rrule(testf, prob, QuadGKJL())
 
 ### N-dimensional
 
